@@ -1,0 +1,244 @@
+<?xml version='1.0' encoding='utf-8'?>
+<OpenSCENARIO>
+  <FileHeader author="BMW AG" date="2020-06-16T10:00:00" description="ALKS Scenario 4.1_3 Swerving Side Vehicle Template" revMajor="1" revMinor="0" />
+  <ParameterDeclarations>
+    
+    <ParameterDeclaration name="Ego_InitSpeed_Ve0" parameterType="double" value="16.66666667" />
+    <ParameterDeclaration name="Duration" parameterType="double" value="40" />
+    <ParameterDeclaration name="SideVehicle_Model" parameterType="string" value="car" />
+    <ParameterDeclaration name="SideVehicle_InitLongitudinalOffset" parameterType="double" value="0.5153" />
+    <ParameterDeclaration name="SideVehicle_InitPosition_RelativeLaneId" parameterType="string" value="1" />
+    <ParameterDeclaration name="Swerve_Offset_Left" parameterType="double" value="0.0793" />
+    <ParameterDeclaration name="Swerve_Offset_Right" parameterType="double" value="0.3805" />
+    <ParameterDeclaration name="Swerve_MaxLateralAcc" parameterType="double" value="1.8397" />
+  </ParameterDeclarations>
+  <CatalogLocations>
+    <VehicleCatalog>
+      <Directory path="../Catalogs/Vehicles" />
+    </VehicleCatalog>
+    <PedestrianCatalog>
+      <Directory path="../Catalogs/Pedestrians" />
+    </PedestrianCatalog>
+    <MiscObjectCatalog>
+      <Directory path="../Catalogs/MiscObjects" />
+    </MiscObjectCatalog>
+    <ControllerCatalog>
+      <Directory path="../Catalogs/Controllers" />
+    </ControllerCatalog>
+  </CatalogLocations>
+  <RoadNetwork>
+    <LogicFile filepath="./ALKS_Road.xodr" />
+  </RoadNetwork>
+  <Entities>
+    <ScenarioObject name="Ego">
+      <CatalogReference catalogName="VehicleCatalog" entryName="car_ego" />
+      <ObjectController>
+        <CatalogReference catalogName="ControllerCatalog" entryName="ALKSController" />
+      </ObjectController>
+    </ScenarioObject>
+    <ScenarioObject name="SideVehicle">
+      <CatalogReference catalogName="VehicleCatalog" entryName="$SideVehicle_Model" />
+    </ScenarioObject>
+  </Entities>
+  <Storyboard>
+    <Init>
+      <Actions>
+        <Private entityRef="Ego">
+          <PrivateAction>
+            <TeleportAction>
+              <Position>
+                <LanePosition laneId="-4" offset="0.0" roadId="0" s="5.0" />
+              </Position>
+            </TeleportAction>
+          </PrivateAction>
+          <PrivateAction>
+            <LongitudinalAction>
+              <SpeedAction>
+                <SpeedActionDynamics dynamicsDimension="time" dynamicsShape="step" value="0" />
+                <SpeedActionTarget>
+                  <AbsoluteTargetSpeed value="$Ego_InitSpeed_Ve0" />
+                </SpeedActionTarget>
+              </SpeedAction>
+            </LongitudinalAction>
+          </PrivateAction>
+        </Private>
+        <Private entityRef="SideVehicle">
+          <PrivateAction>
+            <TeleportAction>
+              <Position>
+                <RelativeLanePosition dLane="$SideVehicle_InitPosition_RelativeLaneId" ds="$SideVehicle_InitLongitudinalOffset" entityRef="Ego" offset="0.0" />
+              </Position>
+            </TeleportAction>
+          </PrivateAction>
+          <PrivateAction>
+            <LongitudinalAction>
+              <SpeedAction>
+                <SpeedActionDynamics dynamicsDimension="time" dynamicsShape="step" value="0" />
+                <SpeedActionTarget>
+                  <AbsoluteTargetSpeed value="$Ego_InitSpeed_Ve0" />
+                </SpeedActionTarget>
+              </SpeedAction>
+            </LongitudinalAction>
+          </PrivateAction>
+        </Private>
+      </Actions>
+    </Init>
+    <Story name="ActivateALKSControllerStory">
+      <Act name="ActivateALKSControllerAct">
+        <ManeuverGroup maximumExecutionCount="1" name="ActivateALKSControllerSequence">
+          <Actors selectTriggeringEntities="false">
+            <EntityRef entityRef="Ego" />
+          </Actors>
+          <Maneuver name="ActivateALKSControllerManeuver">
+            <Event name="ActivateALKSControllerEvent" priority="overwrite">
+              <Action name="ActivateALKSControllerAction">
+                <PrivateAction>
+                  <ActivateControllerAction lateral="true" longitudinal="true" />
+                </PrivateAction>
+              </Action>
+              <StartTrigger>
+                <ConditionGroup>
+                  <Condition conditionEdge="rising" delay="0" name="ActivateALKSControllerEventCondition">
+                    <ByValueCondition>
+                      <SimulationTimeCondition rule="greaterThan" value="10000" />
+                    </ByValueCondition>
+                  </Condition>
+                </ConditionGroup>
+              </StartTrigger>
+            </Event>
+          </Maneuver>
+        </ManeuverGroup>
+        <StartTrigger>
+          <ConditionGroup>
+            <Condition conditionEdge="rising" delay="0" name="ActivateALKSControllerActCondition">
+              <ByValueCondition>
+                <SimulationTimeCondition rule="greaterThan" value="0" />
+              </ByValueCondition>
+            </Condition>
+          </ConditionGroup>
+        </StartTrigger>
+      </Act>
+    </Story>
+    <Story name="SwerveStory">
+      <Act name="SwerveAct">
+        <ManeuverGroup maximumExecutionCount="1" name="SwerveSequence">
+          <Actors selectTriggeringEntities="false">
+            <EntityRef entityRef="SideVehicle" />
+          </Actors>
+          <Maneuver name="SwerveManeuver">
+            <Event name="SwerveEvent" priority="overwrite">
+              <Action name="SwerveAction">
+                <PrivateAction>
+                  <LateralAction>
+                    <LaneOffsetAction continuous="false">
+                      <LaneOffsetActionDynamics dynamicsShape="sinusoidal" maxLateralAcc="$Swerve_MaxLateralAcc" />
+                      <LaneOffsetTarget>
+                        <AbsoluteTargetLaneOffset value="$Swerve_Offset_Left" />
+                      </LaneOffsetTarget>
+                    </LaneOffsetAction>
+                  </LateralAction>
+                </PrivateAction>
+              </Action>
+              <StartTrigger>
+                <ConditionGroup>
+                  <Condition conditionEdge="rising" delay="0" name="SwerveEventStart">
+                    <ByValueCondition>
+                      <SimulationTimeCondition rule="greaterThan" value="5.0" />
+                    </ByValueCondition>
+                  </Condition>
+                </ConditionGroup>
+              </StartTrigger>
+            </Event>
+            <Event name="SwerveEvent2" priority="overwrite">
+              <Action name="SwerveAction2">
+                <PrivateAction>
+                  <LateralAction>
+                    <LaneOffsetAction continuous="false">
+                      <LaneOffsetActionDynamics dynamicsShape="sinusoidal" maxLateralAcc="$Swerve_MaxLateralAcc" />
+                      <LaneOffsetTarget>
+                        <AbsoluteTargetLaneOffset value="0.0" />
+                      </LaneOffsetTarget>
+                    </LaneOffsetAction>
+                  </LateralAction>
+                </PrivateAction>
+              </Action>
+              <StartTrigger>
+                <ConditionGroup>
+                  <Condition conditionEdge="rising" delay="5" name="SwerveEvent2Start">
+                    <ByValueCondition>
+                      <StoryboardElementStateCondition state="endTransition" storyboardElementRef="SwerveAction" storyboardElementType="action" />
+                    </ByValueCondition>
+                  </Condition>
+                </ConditionGroup>
+              </StartTrigger>
+            </Event>
+            <Event name="SwerveEvent3" priority="overwrite">
+              <Action name="SwerveAction3">
+                <PrivateAction>
+                  <LateralAction>
+                    <LaneOffsetAction continuous="false">
+                      <LaneOffsetActionDynamics dynamicsShape="sinusoidal" maxLateralAcc="$Swerve_MaxLateralAcc" />
+                      <LaneOffsetTarget>
+                        <AbsoluteTargetLaneOffset value="$Swerve_Offset_Right" />
+                      </LaneOffsetTarget>
+                    </LaneOffsetAction>
+                  </LateralAction>
+                </PrivateAction>
+              </Action>
+              <StartTrigger>
+                <ConditionGroup>
+                  <Condition conditionEdge="rising" delay="0" name="SwerveEvent3Start">
+                    <ByValueCondition>
+                      <StoryboardElementStateCondition state="endTransition" storyboardElementRef="SwerveAction2" storyboardElementType="action" />
+                    </ByValueCondition>
+                  </Condition>
+                </ConditionGroup>
+              </StartTrigger>
+            </Event>
+            <Event name="SwerveEvent4" priority="overwrite">
+              <Action name="SwerveAction4">
+                <PrivateAction>
+                  <LateralAction>
+                    <LaneOffsetAction continuous="false">
+                      <LaneOffsetActionDynamics dynamicsShape="sinusoidal" maxLateralAcc="$Swerve_MaxLateralAcc" />
+                      <LaneOffsetTarget>
+                        <AbsoluteTargetLaneOffset value="0.0" />
+                      </LaneOffsetTarget>
+                    </LaneOffsetAction>
+                  </LateralAction>
+                </PrivateAction>
+              </Action>
+              <StartTrigger>
+                <ConditionGroup>
+                  <Condition conditionEdge="rising" delay="5" name="SwerveEvent4Start">
+                    <ByValueCondition>
+                      <StoryboardElementStateCondition state="endTransition" storyboardElementRef="SwerveAction3" storyboardElementType="action" />
+                    </ByValueCondition>
+                  </Condition>
+                </ConditionGroup>
+              </StartTrigger>
+            </Event>
+          </Maneuver>
+        </ManeuverGroup>
+        <StartTrigger>
+          <ConditionGroup>
+            <Condition conditionEdge="rising" delay="0" name="SwerveActStart">
+              <ByValueCondition>
+                <SimulationTimeCondition rule="greaterThan" value="0.0" />
+              </ByValueCondition>
+            </Condition>
+          </ConditionGroup>
+        </StartTrigger>
+      </Act>
+    </Story>
+    <StopTrigger>
+      <ConditionGroup>
+        <Condition conditionEdge="rising" delay="0" name="End">
+          <ByValueCondition>
+            <SimulationTimeCondition rule="greaterThan" value="$Duration" />
+          </ByValueCondition>
+        </Condition>
+      </ConditionGroup>
+    </StopTrigger>
+  </Storyboard>
+</OpenSCENARIO>
