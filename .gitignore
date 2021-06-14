@@ -1,0 +1,4 @@
+*.pyc
+new_scenarios/*
+
+!new_scenarios/LHS_scenario_1.xosc/.gitkeep

@@ -1,0 +1,8 @@
+{
+	"Swerve_Offset_Left":2,
+	"Swerve_Offset_Right":2,
+	"Swerve_MaxLateralAcc": 4,
+	"SideVehicle_InitLongitudinalOffset": 1,
+	"LeadVehicle_InitDistance_dx0": 30
+}
+
